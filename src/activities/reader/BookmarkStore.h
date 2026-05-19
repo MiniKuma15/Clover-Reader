@@ -37,7 +37,7 @@ class BookmarkStore {
     FsFile file;
     bool loadedLegacyPath = false;
     if (!Storage.openFileForRead("BKM", getFilePath(), file)) {
-      if (storagePath != legacyPath || legacyPath.empty() || !Storage.openFileForRead("BKM", legacyPath, file)) {
+      if (storagePath == legacyPath || legacyPath.empty() || !Storage.openFileForRead("BKM", legacyPath, file)) {
         return;
       }
       loadedLegacyPath = true;
