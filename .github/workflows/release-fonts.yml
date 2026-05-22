@@ -1,11 +1,22 @@
 name: Build & Publish SD Card Fonts
 
-# Fonts change rarely. Run this manually when font sources or the conversion
-# pipeline are updated. CPR-vCodex publishes its own .cpfont files and
-# fonts.json manifest as release assets in this repository so the firmware can
-# keep working even if the upstream font mirror disappears.
+# Fonts change rarely. Run this manually when needed, or let it publish
+# automatically when the source manifest/conversion pipeline changes.
+# CPR-vCodex publishes its own .cpfont files and fonts.json manifest as release
+# assets in this repository so the firmware can keep working even if the
+# upstream font mirror disappears.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/release-fonts.yml'
+      - 'lib/EpdFont/scripts/sd-fonts.yaml'
+      - 'lib/EpdFont/scripts/cpfont_version.py'
+      - 'lib/EpdFont/scripts/build-sd-fonts.py'
+      - 'lib/EpdFont/scripts/fontconvert_sdcard.py'
+      - 'lib/EpdFont/builtinFonts/source/**'
 
 permissions:
   contents: write
