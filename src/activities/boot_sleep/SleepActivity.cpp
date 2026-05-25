@@ -307,6 +307,32 @@ void drawLatestBookPanel(const GfxRenderer& renderer, const Rect& rect) {
   drawProgressBar(renderer, Rect{innerX, rect.y + 192, innerW, 13}, book.chapterProgressPercent, 1);
 }
 
+void drawCoverStatsFooter(const GfxRenderer& renderer, const Rect& rect) {
+  const int sideBarWidth = 10;
+  const int padX = 16;
+  const std::string dailyGoal = ReadingStatsAnalytics::formatDurationHm(READING_STATS.getTodayReadingMs()) + "/" +
+                                ReadingStatsAnalytics::formatDurationHm(getDailyReadingGoalMs());
+  const bool dailyGoalMet = getDailyReadingGoalMs() > 0 && READING_STATS.getTodayReadingMs() >= getDailyReadingGoalMs();
+  const std::string streak = std::to_string(READING_STATS.getCurrentStreakDays()) + "d";
+  const int globalX = rect.x + sideBarWidth + padX;
+  const int globalRight = rect.x + rect.width - 14;
+
+  renderer.fillRect(rect.x, rect.y, rect.width, rect.height, false);
+  renderer.drawRect(rect.x, rect.y, rect.width, rect.height, 1, true);
+  renderer.fillRect(rect.x, rect.y, sideBarWidth, rect.height, true);
+
+  const int goalCheckX = globalRight - 16;
+  const int goalValueRight = goalCheckX - 8;
+  const int goalValueWidth = renderer.getTextWidth(SMALL_FONT_ID, dailyGoal.c_str());
+  const int goalLabelWidth = std::max(0, goalValueRight - globalX - goalValueWidth - 8);
+  drawTextClipped(renderer, SMALL_FONT_ID, globalX, rect.y + 20, tr(STR_DAILY_GOAL), goalLabelWidth, true,
+                  EpdFontFamily::BOLD);
+  drawRightText(renderer, SMALL_FONT_ID, goalValueRight, rect.y + 20, dailyGoal);
+  drawCheckBox(renderer, goalCheckX, rect.y + 12, dailyGoalMet);
+  drawTextWithRightValue(renderer, SMALL_FONT_ID, globalX, globalRight, rect.y + 51, tr(STR_STREAK), streak,
+                         EpdFontFamily::BOLD);
+}
+
 void drawCoverStatsOverlay(const GfxRenderer& renderer, const Rect& rect, const ReadingBookStats* book) {
   const int sideBarWidth = 10;
   const int padX = 16;
@@ -316,18 +342,11 @@ void drawCoverStatsOverlay(const GfxRenderer& renderer, const Rect& rect, const 
   const std::string author = book ? getSleepBookSubtitle(*book) : std::string(tr(STR_NOT_SET));
   const std::string chapterTitle =
       book && !book->chapterTitle.empty() ? book->chapterTitle : std::string(tr(STR_NOT_SET));
-  const std::string dailyGoal = ReadingStatsAnalytics::formatDurationHm(READING_STATS.getTodayReadingMs()) + "/" +
-                                ReadingStatsAnalytics::formatDurationHm(getDailyReadingGoalMs());
-  const bool dailyGoalMet = getDailyReadingGoalMs() > 0 && READING_STATS.getTodayReadingMs() >= getDailyReadingGoalMs();
-  const std::string streak = std::to_string(READING_STATS.getCurrentStreakDays()) + "d";
-
   const Rect bookRect{rect.x, rect.y, rect.width, 222};
   const Rect globalRect{rect.x, rect.y + bookRect.height + 12, rect.width, 84};
   const int bookX = bookRect.x + sideBarWidth + padX;
   const int bookRight = bookRect.x + bookRect.width - 14;
   const int bookWidth = bookRight - bookX;
-  const int globalX = globalRect.x + sideBarWidth + padX;
-  const int globalRight = globalRect.x + globalRect.width - 14;
 
   renderer.fillRect(bookRect.x, bookRect.y, bookRect.width, bookRect.height, false);
   renderer.drawRect(bookRect.x, bookRect.y, bookRect.width, bookRect.height, 1, true);
@@ -346,20 +365,16 @@ void drawCoverStatsOverlay(const GfxRenderer& renderer, const Rect& rect, const 
                          formatPercent(chapterProgress), EpdFontFamily::BOLD, EpdFontFamily::BOLD);
   drawProgressBar(renderer, Rect{bookX, bookRect.y + 204, bookWidth, 10}, chapterProgress, 1);
 
-  renderer.fillRect(globalRect.x, globalRect.y, globalRect.width, globalRect.height, false);
-  renderer.drawRect(globalRect.x, globalRect.y, globalRect.width, globalRect.height, 1, true);
-  renderer.fillRect(globalRect.x, globalRect.y, sideBarWidth, globalRect.height, true);
+  drawCoverStatsFooter(renderer, globalRect);
+}
 
-  const int goalCheckX = globalRight - 16;
-  const int goalValueRight = goalCheckX - 8;
-  const int goalValueWidth = renderer.getTextWidth(SMALL_FONT_ID, dailyGoal.c_str());
-  const int goalLabelWidth = std::max(0, goalValueRight - globalX - goalValueWidth - 8);
-  drawTextClipped(renderer, SMALL_FONT_ID, globalX, globalRect.y + 20, tr(STR_DAILY_GOAL), goalLabelWidth, true,
-                  EpdFontFamily::BOLD);
-  drawRightText(renderer, SMALL_FONT_ID, goalValueRight, globalRect.y + 20, dailyGoal);
-  drawCheckBox(renderer, goalCheckX, globalRect.y + 12, dailyGoalMet);
-  drawTextWithRightValue(renderer, SMALL_FONT_ID, globalX, globalRight, globalRect.y + 51, tr(STR_STREAK), streak,
-                         EpdFontFamily::BOLD);
+void drawCoverStatsPanel(const GfxRenderer& renderer, const Rect& rect, const ReadingBookStats* book,
+                         const bool footerOnly) {
+  if (footerOnly) {
+    drawCoverStatsFooter(renderer, rect);
+  } else {
+    drawCoverStatsOverlay(renderer, rect, book);
+  }
 }
 
 struct BitmapPlacement {
@@ -495,6 +510,9 @@ void SleepActivity::onEnter() {
       break;
     case (CrossPointSettings::SLEEP_SCREEN_MODE::COVER_STATS):
       renderCoverStatsSleepScreen();
+      break;
+    case (CrossPointSettings::SLEEP_SCREEN_MODE::COVER_STATS_V2):
+      renderCoverStatsSleepScreen(true);
       break;
     default:
       renderDefaultSleepScreen();
@@ -873,7 +891,7 @@ void SleepActivity::renderReadingDashboardSleepScreen() const {
   displaySleepBuffer(renderer);
 }
 
-void SleepActivity::renderCoverStatsSleepScreen() const {
+void SleepActivity::renderCoverStatsSleepScreen(bool footerOnly) const {
   std::string coverBmpPath;
   if (!resolveLastBookCoverPath(coverBmpPath)) {
     renderReadingDashboardSleepScreen();
@@ -896,9 +914,9 @@ void SleepActivity::renderCoverStatsSleepScreen() const {
   const int pageWidth = renderer.getScreenWidth();
   const int pageHeight = renderer.getScreenHeight();
   const int overlayWidth = std::min(pageWidth - 156, 430);
-  const int overlayHeight = 318;
+  const int overlayHeight = footerOnly ? 84 : 318;
   const Rect statsPanel{(pageWidth - overlayWidth) / 2, pageHeight - overlayHeight - 42, overlayWidth, overlayHeight};
-  const ReadingBookStats* book = getCurrentSleepBook();
+  const ReadingBookStats* book = footerOnly ? nullptr : getCurrentSleepBook();
   const bool hasGreyscale = bitmap.hasGreyscale() &&
                             SETTINGS.sleepScreenCoverFilter == CrossPointSettings::SLEEP_SCREEN_COVER_FILTER::NO_FILTER;
 
@@ -907,7 +925,7 @@ void SleepActivity::renderCoverStatsSleepScreen() const {
   if (SETTINGS.sleepScreenCoverFilter == CrossPointSettings::SLEEP_SCREEN_COVER_FILTER::INVERTED_BLACK_AND_WHITE) {
     renderer.invertScreen();
   }
-  drawCoverStatsOverlay(renderer, statsPanel, book);
+  drawCoverStatsPanel(renderer, statsPanel, book, footerOnly);
 
   displaySleepBuffer(renderer);
 
@@ -916,14 +934,14 @@ void SleepActivity::renderCoverStatsSleepScreen() const {
     renderer.clearScreen(0x00);
     renderer.setRenderMode(GfxRenderer::GRAYSCALE_LSB);
     drawFullScreenCoverBitmap(renderer, bitmap);
-    drawCoverStatsOverlay(renderer, statsPanel, book);
+    drawCoverStatsPanel(renderer, statsPanel, book, footerOnly);
     renderer.copyGrayscaleLsbBuffers();
 
     bitmap.rewindToData();
     renderer.clearScreen(0x00);
     renderer.setRenderMode(GfxRenderer::GRAYSCALE_MSB);
     drawFullScreenCoverBitmap(renderer, bitmap);
-    drawCoverStatsOverlay(renderer, statsPanel, book);
+    drawCoverStatsPanel(renderer, statsPanel, book, footerOnly);
     renderer.copyGrayscaleMsbBuffers();
 
     renderer.displayGrayBuffer();
