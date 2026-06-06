@@ -48,7 +48,6 @@ namespace {
 constexpr unsigned long RECENT_BOOK_LONG_PRESS_MS = 1000;
 constexpr int DEFAULT_HOME_SHORTCUT_PAGE_SIZE = 4;
 constexpr int LYRA_HOME_SHORTCUT_PAGE_SIZE = 5;
-constexpr int CAROUSEL_SHORTCUT_COUNT = 5;
 constexpr const char* CAROUSEL_FRAME_CACHE_DIR = "/.crosspoint/home-carousel-cache";
 constexpr uint32_t FNV1A_OFFSET = 2166136261UL;
 constexpr uint32_t FNV1A_PRIME = 16777619UL;
@@ -191,27 +190,23 @@ std::vector<HomeShortcutEntry> getHomeShortcutEntries(const bool hasOpdsServers)
   return entries;
 }
 
-// Builds the carousel shortcut list (up to CAROUSEL_SHORTCUT_COUNT slots):
-//   slots 0..(n-3) : first 3 home shortcuts that are not Settings or Apps
-//   slot  (n-2)    : Settings — always pinned, sourced from definitions if not
-//                    configured as a home shortcut, so the user is never locked out
-//   slot  (n-1)    : Apps hub — always pinned last
+// Builds the carousel shortcut list without truncating configured Home entries.
+// Settings is still injected if missing, and Apps remains pinned last so the
+// user always has an escape hatch even with aggressive shortcut customization.
 std::vector<HomeShortcutEntry> buildCarouselEntries(const std::vector<HomeShortcutEntry>& all) {
-  constexpr int kPinnedCount = 2;
-  constexpr int kVariableSlots = CAROUSEL_SHORTCUT_COUNT - kPinnedCount;
-
   std::vector<HomeShortcutEntry> result;
   HomeShortcutEntry appsEntry{nullptr, true};
-  HomeShortcutEntry settingsEntry;
+  bool foundApps = false;
   bool foundSettings = false;
 
   for (const auto& e : all) {
     if (e.isAppsHub) {
       appsEntry = e;
-    } else if (e.definition && e.definition->id == ShortcutId::Settings) {
-      settingsEntry = e;
-      foundSettings = true;
-    } else if (static_cast<int>(result.size()) < kVariableSlots) {
+      foundApps = true;
+    } else {
+      if (e.definition && e.definition->id == ShortcutId::Settings) {
+        foundSettings = true;
+      }
       result.push_back(e);
     }
   }
@@ -219,17 +214,16 @@ std::vector<HomeShortcutEntry> buildCarouselEntries(const std::vector<HomeShortc
   if (!foundSettings) {
     for (const auto& def : getShortcutDefinitions()) {
       if (def.id == ShortcutId::Settings) {
-        settingsEntry = HomeShortcutEntry{&def};
+        result.push_back(HomeShortcutEntry{&def});
         foundSettings = true;
         break;
       }
     }
   }
 
-  if (foundSettings) {
-    result.push_back(settingsEntry);
+  if (foundApps) {
+    result.push_back(appsEntry);
   }
-  result.push_back(appsEntry);
   return result;
 }
 

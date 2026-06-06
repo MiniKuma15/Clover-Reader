@@ -49,6 +49,7 @@ constexpr int kProgressBadgeRadius = 4;
 constexpr int kMenuIconSize = 32;
 constexpr int kMenuIconPad = 14;
 constexpr int kHighlightPad = 12;
+constexpr int kVisibleMenuSlots = 5;
 
 int lastCarouselSelectorIndex = -1;
 
@@ -280,16 +281,28 @@ void LyraCarouselTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int but
   (void)showAccessory;
   if (buttonCount <= 0) return;
 
+  const int visibleCount = std::min(buttonCount, kVisibleMenuSlots);
+  const int safeSelectedIndex = (selectedIndex >= 0 && selectedIndex < buttonCount) ? selectedIndex : -1;
+  const int maxWindowStart = std::max(0, buttonCount - visibleCount);
+  int windowStart = 0;
+  if (safeSelectedIndex >= 0) {
+    windowStart = std::clamp(safeSelectedIndex - visibleCount / 2, 0, maxWindowStart);
+  }
+
+  const int screenW = renderer.getScreenWidth();
   const int tileH = kMenuIconPad + kMenuIconSize + kMenuIconPad;
-  const int tileW = renderer.getScreenWidth() / buttonCount;
+  const int tileW = screenW / visibleCount;
   const int rowY = renderer.getScreenHeight() - LyraCarouselMetrics::values.buttonHintsHeight - tileH;
 
-  for (int i = 0; i < buttonCount; ++i) {
-    const int tileX = i * tileW;
+  renderer.fillRect(0, rowY, screenW, tileH, false);
+
+  for (int slot = 0; slot < visibleCount; ++slot) {
+    const int i = windowStart + slot;
+    const int tileX = slot * tileW;
     const int iconX = tileX + (tileW - kMenuIconSize) / 2;
     const int iconY = rowY + kMenuIconPad;
 
-    if (selectedIndex == i) {
+    if (safeSelectedIndex == i) {
       const int highlightSize = kMenuIconSize + 2 * kHighlightPad;
       const int highlightY = rowY + (tileH - highlightSize) / 2;
       renderer.fillRoundedRect(iconX - kHighlightPad, highlightY, highlightSize, highlightSize, kCornerRadius,
@@ -299,7 +312,7 @@ void LyraCarouselTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int but
     if (rowIcon != nullptr) {
       const uint8_t* bmp = iconForName(rowIcon(i), kMenuIconSize);
       if (bmp != nullptr) {
-        if (selectedIndex == i) {
+        if (safeSelectedIndex == i) {
           if (renderer.isDarkMode()) {
             renderer.drawIconBlack(bmp, iconX, iconY, kMenuIconSize, kMenuIconSize);
           } else {
@@ -309,6 +322,18 @@ void LyraCarouselTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int but
           renderer.drawIcon(bmp, iconX, iconY, kMenuIconSize, kMenuIconSize);
         }
       }
+    }
+  }
+
+  if (buttonCount > visibleCount) {
+    const int midY = rowY + tileH / 2;
+    if (windowStart > 0) {
+      renderer.drawLine(10, midY, 20, midY - 9, 2, true);
+      renderer.drawLine(10, midY, 20, midY + 9, 2, true);
+    }
+    if (windowStart + visibleCount < buttonCount) {
+      renderer.drawLine(screenW - 10, midY, screenW - 20, midY - 9, 2, true);
+      renderer.drawLine(screenW - 10, midY, screenW - 20, midY + 9, 2, true);
     }
   }
 }

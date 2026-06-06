@@ -62,7 +62,7 @@ def main() -> None:
     require("src/activities/home/HomeActivity.cpp", "bool HomeActivity::renderCarouselFrame")
     require("src/activities/home/HomeActivity.cpp", "bool HomeActivity::loadCarouselFrameFromStorage")
     require("src/activities/home/HomeActivity.cpp", "bool HomeActivity::saveCarouselFrameToStorage")
-    require("src/activities/home/HomeActivity.cpp", "lyra-carousel-frame-v6-carousel-thumb-only")
+    require("src/activities/home/HomeActivity.cpp", "lyra-carousel-frame-v7-progress-badge")
     require("src/activities/home/HomeActivity.cpp",
             "if (wasFirstRenderDone && carouselTheme && recentsLoaded && !carouselFramesReady &&")
     if "carouselFrames[" in read("src/activities/home/HomeActivity.h"):
@@ -83,7 +83,7 @@ def main() -> None:
     require("src/activities/home/HomeActivity.cpp", "if (isLyraCarouselTheme() && progress != lastCarouselBookIndex)")
     require("src/activities/home/HomeActivity.cpp", "void HomeActivity::scheduleCarouselCoverLoadIfNeeded")
     require("src/activities/home/HomeActivity.cpp", "epub.load(isLyraCarouselTheme(), true)")
-    require("src/activities/home/HomeActivity.cpp", "lyra-carousel-frame-v6-carousel-thumb-only")
+    require("src/activities/home/HomeActivity.cpp", "lyra-carousel-frame-v7-progress-badge")
     require("src/activities/home/HomeActivity.cpp", "getCarouselCenterThumbPath")
     require("src/activities/home/HomeActivity.cpp", "hasCarouselUsableThumb")
     require("src/activities/home/HomeActivity.cpp", "LyraCarouselTheme::kCenterCoverW")

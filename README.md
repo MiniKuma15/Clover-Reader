@@ -44,12 +44,12 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 |---|---|
 | Project | `CPR-vCodex` |
 | Device | `Xteink X4`; `Xteink X3` compatibility reported by users, not personally tested |
-| Current release (CPR-vCodex) build | [`1.3.0.13-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.13-cpr-vcodex) |
+| Current release (CPR-vCodex) build | [`1.3.0.14-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.14-cpr-vcodex) |
 | Latest SD font package | [`sd-fonts-m1-b4`](https://github.com/franssjz/cpr-vcodex/releases/tag/sd-fonts-m1-b4) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
-| Current development sync | Selected CrossPoint Reader fixes after [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078), including EPUB image/cache/CSS/parser performance, KOReader chapter-start mapping, font-upload hardening, long-press chapter-start navigation, progress-bar placement, and `open-x4-sdk` [`26648d6`](https://github.com/crosspoint-reader/community-sdk/commit/26648d643a1c883ab2f71e1869d05fe2a0c9d498). Hebrew/RTL, translation-only churn, OpenDyslexic storage migration, docs-only guide updates, and t5s3 README-only changes remain deferred. |
-| Current development fixes | Fixed EPUB Bionic Reading Normal text-weight regressions reported in [#63](https://github.com/franssjz/cpr-vcodex/issues/63) and [#64](https://github.com/franssjz/cpr-vcodex/issues/64), restoring real bold-face prefixes consistently in BW and anti-aliased rendering while keeping font prewarm aligned. Also incorporates the upstream X3 first page-turn ghosting cleanup after full refreshes reported in [#81](https://github.com/franssjz/cpr-vcodex/issues/81), hardens Wi-Fi joins reported in [#85](https://github.com/franssjz/cpr-vcodex/issues/85), fixes Lyra Carousel Home ghosting after returning from Reading Heatmap and other Home-launched apps reported in [#86](https://github.com/franssjz/cpr-vcodex/issues/86), makes on-device OTA checks more resilient for [#89](https://github.com/franssjz/cpr-vcodex/issues/89), and adds a default-on `Clean Sleep Refresh` setting for [#92](https://github.com/franssjz/cpr-vcodex/issues/92). |
-| Latest release notes | - Synced selected CrossPoint Reader upstream fixes through [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) while preserving vCodex stats, bookmarks, apps, release, and Auto Flash behavior.<br>- Added EPUB horizontal rules, superscript/subscript rendering, CSS `vertical-align: super/sub`, and TOC subchapter anchor navigation.<br>- Hardened EPUB cache/resource paths, OPF cover validation, CSS discovery, folder-delete cache cleanup, SD file closing, OPDS parsing, and pinned `PNGdec` to `1.1.6`.<br>- Updated SD-card font presets/docs and deferred larger upstream bookmark, RTL, OTA/downloader, settings, and translation-bulk rewrites for a safer later port. |
+| Current release sync | Selected CrossPoint Reader fixes after [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078), including EPUB image/cache/CSS/parser performance, KOReader chapter-start mapping, font-upload hardening, long-press chapter-start navigation, progress-bar placement, and `open-x4-sdk` [`26648d6`](https://github.com/crosspoint-reader/community-sdk/commit/26648d643a1c883ab2f71e1869d05fe2a0c9d498). Hebrew/RTL, translation-only churn, OpenDyslexic storage migration, docs-only guide updates, and t5s3 README-only changes remain deferred. |
+| Current release fixes | Fixed EPUB Bionic Reading Normal text-weight regressions reported in [#63](https://github.com/franssjz/cpr-vcodex/issues/63) and [#64](https://github.com/franssjz/cpr-vcodex/issues/64), restoring real bold-face prefixes consistently in BW and anti-aliased rendering while keeping font prewarm aligned. Also incorporates the upstream X3 first page-turn ghosting cleanup after full refreshes reported in [#81](https://github.com/franssjz/cpr-vcodex/issues/81), hardens Wi-Fi joins reported in [#85](https://github.com/franssjz/cpr-vcodex/issues/85), fixes Lyra Carousel Home ghosting after returning from Reading Heatmap and other Home-launched apps reported in [#86](https://github.com/franssjz/cpr-vcodex/issues/86), keeps every configured Lyra Carousel Home shortcut reachable through a sliding bottom icon row, makes on-device OTA checks more resilient for [#89](https://github.com/franssjz/cpr-vcodex/issues/89), and adds a default-on `Clean Sleep Refresh` setting for [#92](https://github.com/franssjz/cpr-vcodex/issues/92). |
+| Latest release notes | - Synced selected CrossPoint Reader upstream fixes through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078) while preserving vCodex stats, bookmarks, apps, release, and Auto Flash behavior.<br>- Improved EPUB performance and reliability with lazy CSS parsing, reduced parser allocations, decoded internal asset paths, streaming JPEG/PNG pixel caches, and safer grayscale cleanup after image pages.<br>- Restored real Bionic Reading bold prefixes, added X3 full-refresh ghosting cleanup from the SDK update, hardened Wi-Fi joins, and improved KOReader chapter-start mapping/navigation.<br>- Fixed Lyra Carousel app-return ghosting and made the bottom shortcut row scroll laterally so all configured Home shortcuts remain reachable.<br>- Added the default-on `Clean Sleep Refresh` option for sleep entry cleanup and kept OTA checks resilient with a GitHub Release fallback. |
 | Base firmware line | `CrossPoint Reader 1.3.0` |
 | Latest official commit reviewed | [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078) |
 | Latest official commit incorporated | Selected EPUB/rendering, cache, filesystem, image, KOReader Sync, font-upload, SDK, and navigation fixes from [`7accc607`](https://github.com/crosspoint-reader/crosspoint-reader/commit/7accc607) through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078); larger upstream bookmark, RTL, OTA/downloader, translation-bulk, and settings rewrites remain intentionally deferred. |
@@ -135,7 +135,7 @@ This project is **not affiliated with Xteink**.
 - manual per-book reading-time corrections for missed or accidental sessions
 - `Achievements` built on top of the same reading data model
 - `Sync Day` for coherent day-based stats on hardware without a trustworthy sleep RTC
-- `Lyra Carousel` Home theme, originally created by [zgredex](https://github.com/zgredex), adapted to this fork by [erickosanchezj](https://github.com/erickosanchezj), and limited to 3 books for smoother X4 navigation
+- `Lyra Carousel` Home theme, originally created by [zgredex](https://github.com/zgredex), adapted to this fork by [erickosanchezj](https://github.com/erickosanchezj), limited to 3 books for smoother X4 navigation, with a sliding bottom shortcut row so every configured Home action remains reachable
 - experimental X3-only `Tilt Page Turn`, hidden unless the QMI8658 IMU is detected and disabled by default
 - downloadable SD-card fonts from CrossPoint plus vCodex-only families such as `ChareInk`
 - SD-card firmware update from Settings for local `.bin` flashing without a browser
@@ -248,7 +248,7 @@ Notable launcher behavior:
 - ordering is configurable
 - stats-related shortcuts show useful live metadata
 - `Apps` paginates long lists and supports page-jump navigation
-- `Lyra Carousel` is available as an optional cover-focused Home theme and is limited to 3 books for smoother X4 navigation
+- `Lyra Carousel` is available as an optional cover-focused Home theme and is limited to 3 books for smoother X4 navigation; its bottom shortcut row shows five icons at a time but scrolls laterally with selection so longer Home shortcut lists remain reachable
   It was originally created by [zgredex](https://github.com/zgredex) and adapted to CPR-vCodex by [erickosanchezj](https://github.com/erickosanchezj).
 
 Management lives in:
@@ -507,7 +507,7 @@ Each packaged dev build now keeps the base firmware line and the local flash ide
 Practical values to look at:
 
 - base firmware line: `CrossPoint Reader 1.3.0`
-- current release build style: `1.3.0.13-cpr-vcodex`
+- current release build style: `1.3.0.14-cpr-vcodex`
 - packaged artifact style: `artifacts/<version>-cpr-vcodex.bin`
 
 The incremental `.bNNNN` suffix exists specifically to help distinguish newer flashes from older ones on real hardware.
@@ -577,10 +577,10 @@ Release publishing:
 - before tagging, run:
 
 ```powershell
-python scripts/pre_release_check.py --tag 1.3.0.13-cpr-vcodex
+python scripts/pre_release_check.py --tag 1.3.0.14-cpr-vcodex
 ```
 
-- push a stable tag named like `1.3.0.13-cpr-vcodex`
+- push a stable tag named like `1.3.0.14-cpr-vcodex`
 - the release workflow builds `gh_release`, validates that the packaged artifact
   name matches the tag, and attaches only the flashable `<tag>.bin` to the GitHub Release
 - tagged CI release builds derive the firmware release number from the tag, not
