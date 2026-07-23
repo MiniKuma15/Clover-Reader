@@ -148,7 +148,7 @@ bool shouldUseNotoUiFonts(const Language lang) {
   (void)lang;
   return false;
 #else
-  return lang == Language::VI;
+  return lang == Language::VI || lang == Language::TH;
 #endif
 }
 
