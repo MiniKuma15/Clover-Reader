@@ -395,9 +395,12 @@ for index, glyph in enumerate(all_glyphs):
 
 COMBINING_MARKS_START = 0x0300
 COMBINING_MARKS_END = 0x036F
+THAI_COMBINING_START = 0x0E31
+THAI_COMBINING_END = 0x0E4E
 all_codepoints = [g.code_point for g in glyph_props]
 kernable_codepoints = set(cp for cp in all_codepoints
-                          if not (COMBINING_MARKS_START <= cp <= COMBINING_MARKS_END))
+                          if not (COMBINING_MARKS_START <= cp <= COMBINING_MARKS_END)
+                          and not (THAI_COMBINING_START <= cp <= THAI_COMBINING_END))
 
 # Map each kernable codepoint to the font-stack index that serves it
 # (same priority logic as load_glyph).
