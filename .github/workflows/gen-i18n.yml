@@ -1,0 +1,29 @@
+name: Generate I18n
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gen-i18n:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run generator
+        run: python3 scripts/gen_i18n.py lib/I18n/translations lib/I18n/
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lib/I18n/I18nKeys.h lib/I18n/I18nStrings.cpp lib/I18n/I18nStrings.h
+          git diff --cached --quiet || git commit -m "chore: regenerate i18n files"
+          git push
