@@ -1,0 +1,30 @@
+name: Build Firmware
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+
+      - name: Build
+        run: |
+          pio run -e default
+
+      - name: Upload BIN
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpr-vcodex-bin
+          path: |
+            .pio/build/default/*.bin
