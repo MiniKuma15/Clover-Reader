@@ -261,9 +261,9 @@ std::vector<Hyphenator::BreakInfo> Hyphenator::breakOffsets(const std::string& w
     // Check the codepoint at the break position: if it's a CJK character,
     // no hyphen is needed since CJK scripts don't use hyphenation.
     bool needsHyphen = true;
-    if (idx < cps.size() && (utf8IsCjkBreakable(cps[idx].value) || utf8IsThaiBreakable(cps[idx].value))) {
+    if (idx < cps.size() && utf8IsCjkBreakable(cps[idx].value)) {
       needsHyphen = false;
-    } else if (idx > 0 && (utf8IsCjkBreakable(cps[idx - 1].value) || utf8IsThaiBreakable(cps[idx - 1].value))) {
+    } else if (idx > 0 && utf8IsCjkBreakable(cps[idx - 1].value)) {
       needsHyphen = false;
     }
     breaks.push_back({byteOffsetForIndex(cps, idx), needsHyphen});
