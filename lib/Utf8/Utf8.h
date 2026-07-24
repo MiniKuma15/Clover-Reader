@@ -43,3 +43,11 @@ inline bool utf8IsCombiningMark(const uint32_t cp) {
          || (cp >= 0x0E34 && cp <= 0x0E3A)   // Thai vowels: I, II, UE, UEE, U, UU, PHINTHU
          || (cp >= 0x0E47 && cp <= 0x0E4E);  // Thai tone marks + THANTHAKHAT
 }
+
+// Returns true for Thai base characters (consonants, vowels, digits, punctuation)
+// that can start a new line-break opportunity — everything in the Thai block that
+// is NOT a combining mark. Used to chop long space-less Thai runs into small
+// breakable units instead of one oversized word (see utf8IsCombiningMark).
+inline bool utf8IsThaiBreakable(const uint32_t cp) {
+  return (cp >= 0x0E01 && cp <= 0x0E5B) && !utf8IsCombiningMark(cp);
+}
