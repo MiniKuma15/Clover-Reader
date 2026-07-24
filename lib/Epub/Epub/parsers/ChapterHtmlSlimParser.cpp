@@ -1907,7 +1907,7 @@ void XMLCALL ChapterHtmlSlimParser::characterData(void* userData, const XML_Char
       const uint32_t cp = utf8NextCodepoint(&cpPtr);
       if (utf8IsThaiBreakable(cp) && self->partWordBufferIndex > 0) {
         self->flushPartWordBuffer();
-        self->nextWordContinues = true;
+        self->nextWordContinues = false;
       }
     }
 
