@@ -39,7 +39,7 @@ jobs:
           fonttools varLib.instancer -o /tmp/fonts/NotoSansThaiLooped-Bold-static.ttf \
             /tmp/fonts/NotoSansThaiLooped-Var.ttf wght=700 wdth=100
 
-      - name: Regenerate notosans_10 regular/bold with Thai fallback
+      - name: Regenerate notosans UI fonts with Thai fallback
         working-directory: lib/EpdFont
         run: |
           python3 scripts/fontconvert.py notosans_10_regular 10 \
@@ -48,11 +48,14 @@ jobs:
           python3 scripts/fontconvert.py notosans_10_bold 10 \
             /tmp/fonts/NotoSans-Bold-static.ttf /tmp/fonts/NotoSansThaiLooped-Bold-static.ttf \
             --2bit --compress --darken-aa --pnum > builtinFonts/notosans_10_bold.h
+          python3 scripts/fontconvert.py notosans_8_regular 8 \
+            /tmp/fonts/NotoSans-Regular-static.ttf /tmp/fonts/NotoSansThaiLooped-Regular-static.ttf \
+            --2bit --compress --darken-aa --pnum > builtinFonts/notosans_8_regular.h
 
       - name: Commit regenerated font files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add lib/EpdFont/builtinFonts/notosans_10_regular.h lib/EpdFont/builtinFonts/notosans_10_bold.h
-          git diff --cached --quiet || git commit -m "feat: add Thai glyphs to notosans_10 UI font"
+          git add lib/EpdFont/builtinFonts/notosans_10_regular.h lib/EpdFont/builtinFonts/notosans_10_bold.h lib/EpdFont/builtinFonts/notosans_8_regular.h
+          git diff --cached --quiet || git commit -m "feat: add Thai glyphs to notosans_8/10 UI fonts"
           git push
