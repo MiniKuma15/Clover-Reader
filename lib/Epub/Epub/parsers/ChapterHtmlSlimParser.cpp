@@ -1896,6 +1896,21 @@ void XMLCALL ChapterHtmlSlimParser::characterData(void* userData, const XML_Char
       }
     }
 
+    // Thai script has no spaces between words. When a new Thai base character
+    // begins (not a combining vowel/tone mark), flush whatever was buffered so
+    // each Thai base+mark cluster becomes its own breakable unit — this keeps
+    // long Thai paragraphs from turning into one oversized "word" that makes
+    // line-breaking/hyphenation prohibitively slow (matches the CJK intent above).
+    if (static_cast<uint8_t>(s[i]) == 0xE0 && i + 2 < len &&
+        (static_cast<uint8_t>(s[i + 1]) == 0xB8 || static_cast<uint8_t>(s[i + 1]) == 0xB9)) {
+      const unsigned char* cpPtr = reinterpret_cast<const unsigned char*>(&s[i]);
+      const uint32_t cp = utf8NextCodepoint(&cpPtr);
+      if (utf8IsThaiBreakable(cp) && self->partWordBufferIndex > 0) {
+        self->flushPartWordBuffer();
+        self->nextWordContinues = true;
+      }
+    }
+
     // If we're about to run out of space, then cut the word off and start a new one.
     // For CJK text (no spaces), this is the primary word-breaking mechanism.
     // We must avoid splitting multi-byte UTF-8 sequences across word boundaries,
