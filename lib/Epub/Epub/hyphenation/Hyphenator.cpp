@@ -246,6 +246,9 @@ std::vector<Hyphenator::BreakInfo> Hyphenator::breakOffsets(const std::string& w
     const size_t minPrefix = hyphenator ? hyphenator->minPrefix() : LiangWordConfig::kDefaultMinPrefix;
     const size_t minSuffix = hyphenator ? hyphenator->minSuffix() : LiangWordConfig::kDefaultMinSuffix;
     for (size_t idx = minPrefix; idx + minSuffix <= cps.size(); ++idx) {
+      // Never break right before a combining mark (e.g. Thai vowel/tone mark) — it
+      // must stay attached to its base character or it renders detached/misplaced.
+      if (utf8IsCombiningMark(cps[idx].value)) continue;
       indexes.push_back(idx);
     }
   }
