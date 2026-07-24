@@ -431,14 +431,25 @@ void GfxRenderer::drawText(const int fontId, const int x, const int y, const cha
 
   uint32_t cp;
   uint32_t prevCp = 0;
+  int stackedMarkHeight = 0;  // extra height already consumed by marks stacked above this base
   while ((cp = utf8NextCodepoint(reinterpret_cast<const uint8_t**>(&text)))) {
     if (utf8IsCombiningMark(cp)) {
       const EpdGlyph* combiningGlyph = font.getGlyph(cp, style);
       if (!combiningGlyph) continue;
-      const int raiseBy = combiningMark::raiseAboveBase(combiningGlyph->top, combiningGlyph->height, lastBaseTop);
+      // Pretend the "base" already extends up to the top of previously stacked marks so a
+      // second mark (e.g. Thai tone mark above an upper vowel) stacks above it instead of
+      // overlapping — the renderer has no true mark-to-mark positioning, so we approximate it.
+      const int effectiveBaseTop = lastBaseTop + stackedMarkHeight;
+      const int raiseBy = combiningMark::raiseAboveBase(combiningGlyph->top, combiningGlyph->height, effectiveBaseTop);
       const int combiningX = combiningMark::centerOver(lastBaseX, lastBaseLeft, lastBaseWidth, combiningGlyph->left,
                                                        combiningGlyph->width);
-      renderCharImpl<TextRotation::None>(*this, renderMode, font, cp, combiningX, yPos - raiseBy, black, style);
+      renderCharImpl<TextRotation::None>(*this, renderMode, font, cp, combiningX,
+                                        yPos - raiseBy - stackedMarkHeight, black, style);
+      // Only marks that sit above the baseline (top > 0) participate in upward stacking;
+      // below-base marks (e.g. Thai sara u/sara uu) stack independently downward.
+      if (combiningGlyph->top > 0) {
+        stackedMarkHeight += combiningGlyph->height + raiseBy;
+      }
       continue;
     }
 
@@ -457,6 +468,7 @@ void GfxRenderer::drawText(const int fontId, const int x, const int y, const cha
     lastBaseLeft = glyph ? glyph->left : 0;
     lastBaseWidth = glyph ? glyph->width : 0;
     lastBaseTop = glyph ? glyph->top : 0;
+    stackedMarkHeight = 0;  // new base character — reset mark stacking
     prevAdvanceFP = glyph ? glyph->advanceX : 0;  // 12.4 fixed-point
 
     const bool isSupSub = (style & (EpdFontFamily::SUP | EpdFontFamily::SUB)) != 0;
@@ -1782,6 +1794,7 @@ void GfxRenderer::drawTextRotated90CW(const int fontId, const int x, const int y
     lastBaseLeft = glyph ? glyph->left : 0;
     lastBaseWidth = glyph ? glyph->width : 0;
     lastBaseTop = glyph ? glyph->top : 0;
+    stackedMarkHeight = 0;  // new base character — reset mark stacking
     prevAdvanceFP = glyph ? glyph->advanceX : 0;  // 12.4 fixed-point
 
     renderCharImpl<TextRotation::Rotated90CW>(*this, renderMode, font, cp, x, lastBaseY, black, style);
