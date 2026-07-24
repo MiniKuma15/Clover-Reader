@@ -1903,20 +1903,17 @@ void XMLCALL ChapterHtmlSlimParser::characterData(void* userData, const XML_Char
     // decoder can't interpret.
     if (self->partWordBufferIndex >= MAX_WORD_SIZE) {
       int safeLen = utf8SafeTruncateBuffer(self->partWordBuffer, self->partWordBufferIndex);
-
-      // If the next incoming character is a combining mark (Thai vowel/tone mark),
-      // it belongs to the LAST base character currently in the buffer. Back the
-      // cut up by one codepoint so that base character carries over together with
-      // its upcoming mark, instead of being flushed alone and leaving the mark
-      // orphaned at the start of the next word (which renders in the wrong spot).
-      if (i < len) {
-        const unsigned char* nextPeek = reinterpret_cast<const unsigned char*>(&s[i]);
-        const uint32_t nextCp = utf8NextCodepoint(&nextPeek);
-        if (utf8IsCombiningMark(nextCp) && safeLen > 0) {
-          int backLen = safeLen - 1;
-          while (backLen > 0 && (static_cast<uint8_t>(self->partWordBuffer[backLen]) & 0xC0) == 0x80) backLen--;
-          safeLen = backLen;
-        }
+      // Back up further so the cut never lands mid Thai base+combining-mark cluster
+      // (otherwise a stray vowel/tone mark becomes an orphaned "word" with no base,
+      // corrupting its rendered position).
+      while (safeLen > 0) {
+        const unsigned char* peek = reinterpret_cast<const unsigned char*>(self->partWordBuffer + safeLen);
+        if (safeLen >= (int)self->partWordBufferIndex) break;
+        const uint32_t nextCp = utf8NextCodepoint(&peek);
+        if (!utf8IsCombiningMark(nextCp)) break;
+        int prevLen = safeLen - 1;
+        while (prevLen > 0 && (static_cast<uint8_t>(self->partWordBuffer[prevLen]) & 0xC0) == 0x80) prevLen--;
+        safeLen = prevLen;
       }
 
       if (safeLen < self->partWordBufferIndex && safeLen > 0) {
