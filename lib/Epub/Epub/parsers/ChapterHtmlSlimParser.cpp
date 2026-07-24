@@ -1903,18 +1903,6 @@ void XMLCALL ChapterHtmlSlimParser::characterData(void* userData, const XML_Char
     // decoder can't interpret.
     if (self->partWordBufferIndex >= MAX_WORD_SIZE) {
       int safeLen = utf8SafeTruncateBuffer(self->partWordBuffer, self->partWordBufferIndex);
-      // Back up further so the cut never lands mid Thai base+combining-mark cluster
-      // (otherwise a stray vowel/tone mark becomes an orphaned "word" with no base,
-      // corrupting its rendered position).
-      while (safeLen > 0) {
-        const unsigned char* peek = reinterpret_cast<const unsigned char*>(self->partWordBuffer + safeLen);
-        if (safeLen >= (int)self->partWordBufferIndex) break;
-        const uint32_t nextCp = utf8NextCodepoint(&peek);
-        if (!utf8IsCombiningMark(nextCp)) break;
-        int prevLen = safeLen - 1;
-        while (prevLen > 0 && (static_cast<uint8_t>(self->partWordBuffer[prevLen]) & 0xC0) == 0x80) prevLen--;
-        safeLen = prevLen;
-      }
 
       if (safeLen < self->partWordBufferIndex && safeLen > 0) {
         // Incomplete UTF-8 sequence at the end — save it before flushing
