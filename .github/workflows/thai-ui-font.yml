@@ -1,0 +1,58 @@
+name: Generate Thai UI Font
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gen-thai-font:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install freetype-py fonttools
+
+      - name: Download source fonts
+        run: |
+          mkdir -p /tmp/fonts
+          curl -fL -o /tmp/fonts/NotoSans-Regular.ttf \
+            "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
+          curl -fL -o /tmp/fonts/NotoSansThaiLooped-Var.ttf \
+            "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansthailooped/NotoSansThaiLooped%5Bwdth%2Cwght%5D.ttf"
+
+      - name: Instantiate static weights from variable fonts
+        run: |
+          fonttools varLib.instancer -o /tmp/fonts/NotoSans-Regular-static.ttf \
+            /tmp/fonts/NotoSans-Regular.ttf wght=400 wdth=100
+          fonttools varLib.instancer -o /tmp/fonts/NotoSans-Bold-static.ttf \
+            /tmp/fonts/NotoSans-Regular.ttf wght=700 wdth=100
+          fonttools varLib.instancer -o /tmp/fonts/NotoSansThaiLooped-Regular-static.ttf \
+            /tmp/fonts/NotoSansThaiLooped-Var.ttf wght=400 wdth=100
+          fonttools varLib.instancer -o /tmp/fonts/NotoSansThaiLooped-Bold-static.ttf \
+            /tmp/fonts/NotoSansThaiLooped-Var.ttf wght=700 wdth=100
+
+      - name: Regenerate notosans_10 regular/bold with Thai fallback
+        working-directory: lib/EpdFont
+        run: |
+          python3 scripts/fontconvert.py notosans_10_regular 10 \
+            /tmp/fonts/NotoSans-Regular-static.ttf /tmp/fonts/NotoSansThaiLooped-Regular-static.ttf \
+            --2bit --compress --darken-aa --pnum > builtinFonts/notosans_10_regular.h
+          python3 scripts/fontconvert.py notosans_10_bold 10 \
+            /tmp/fonts/NotoSans-Bold-static.ttf /tmp/fonts/NotoSansThaiLooped-Bold-static.ttf \
+            --2bit --compress --darken-aa --pnum > builtinFonts/notosans_10_bold.h
+
+      - name: Commit regenerated font files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lib/EpdFont/builtinFonts/notosans_10_regular.h lib/EpdFont/builtinFonts/notosans_10_bold.h
+          git diff --cached --quiet || git commit -m "feat: add Thai glyphs to notosans_10 UI font"
+          git push
